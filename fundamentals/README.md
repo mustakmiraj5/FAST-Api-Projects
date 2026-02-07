@@ -16,6 +16,8 @@ Before you begin, ensure you have the following installed:
 
 ## Quick Start
 
+### Option 1: Using Virtual Environment (Recommended for Development)
+
 ```bash
 # Navigate to project directory
 cd fundamentals
@@ -32,6 +34,19 @@ pip install -r requirements.txt
 
 # Run the server
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
+```
+
+### Option 2: Using Docker (Recommended for Production)
+
+```bash
+# Navigate to project directory
+cd fundamentals
+
+# Build Docker image
+docker build -t fastapi-test .
+
+# Run Docker container
+docker run --rm -p 8000:8000 fastapi-test
 ```
 
 Visit [http://localhost:8000/docs](http://localhost:8000/docs) to see the interactive API documentation.
@@ -190,11 +205,113 @@ FastAPI automatically generates interactive API documentation:
 ```
 fundamentals/
 ├── .env              # Environment variables
-├── .venv/            # Virtual environment
+├── .venv/            # Virtual environment (not included in Docker)
+├── Dockerfile        # Docker configuration for containerization
 ├── main.py           # Main application file
 ├── requirements.txt  # Project dependencies
 └── README.md         # This file
 ```
+
+## Docker Deployment
+
+You can run this application using Docker, which packages the application and all its dependencies into a container.
+
+### Prerequisites for Docker
+
+- Docker installed on your system ([Download Docker](https://www.docker.com/get-started))
+
+### Building the Docker Image
+
+Build the Docker image with the following command:
+
+```bash
+docker build -t fastapi-test .
+```
+
+**What this command does:**
+- `docker build` - Builds a Docker image from the Dockerfile
+- `-t fastapi-test` - Tags the image with the name "fastapi-test"
+- `.` - Uses the current directory as the build context
+
+**The build process:**
+1. Uses Python 3.11-slim as the base image
+2. Sets up the working directory as `/app`
+3. Copies and installs dependencies from `requirements.txt`
+4. Copies the application code (`main.py`) and environment file (`.env`)
+5. Exposes port 8000
+6. Sets the default command to run uvicorn
+
+### Running the Docker Container
+
+Once the image is built, run the container:
+
+```bash
+docker run --rm -p 8000:8000 fastapi-test
+```
+
+**Command breakdown:**
+- `docker run` - Creates and starts a new container
+- `--rm` - Automatically removes the container when it stops
+- `-p 8000:8000` - Maps port 8000 from the container to port 8000 on your host machine
+- `fastapi-test` - The name of the image to run
+
+**Running in detached mode (background):**
+
+```bash
+docker run -d --rm -p 8000:8000 --name my-fastapi-app fastapi-test
+```
+
+- `-d` - Runs the container in detached mode (background)
+- `--name my-fastapi-app` - Assigns a name to the container
+
+**Overriding environment variables:**
+
+You can override environment variables without rebuilding the image:
+
+```bash
+docker run --rm -p 8000:8000 -e APP_NAME="Custom App Name" fastapi-test
+```
+
+Or use an environment file:
+
+```bash
+docker run --rm -p 8000:8000 --env-file .env fastapi-test
+```
+
+### Managing Docker Containers
+
+**View running containers:**
+```bash
+docker ps
+```
+
+**Stop a running container:**
+```bash
+docker stop my-fastapi-app
+```
+
+**View container logs:**
+```bash
+docker logs my-fastapi-app
+```
+
+**View logs in real-time:**
+```bash
+docker logs -f my-fastapi-app
+```
+
+### Docker vs Virtual Environment
+
+**Use Docker when:**
+- You want consistent environments across different machines
+- Deploying to production servers
+- Sharing the application with team members
+- You need complete isolation including system dependencies
+
+**Use Virtual Environment when:**
+- Developing locally and making frequent code changes
+- You want faster iteration (no rebuild needed)
+- You prefer direct access to Python debugging tools
 
 ## Deactivating the Virtual Environment
 
@@ -218,11 +335,16 @@ This returns your terminal to using the global Python installation.
 
 ### Port Already in Use
 
-If port 8000 is already in use, specify a different port:
-
+**For virtual environment:**
 ```bash
 uvicorn main:app --port 8001 --reload
 ```
+
+**For Docker:**
+```bash
+docker run --rm -p 8001:8000 fastapi-test
+```
+Note: The format is `-p <host-port>:<container-port>`, so 8001 on your machine maps to 8000 in the container.
 
 ### Module Not Found Error
 
@@ -232,6 +354,21 @@ Ensure your virtual environment is activated and all dependencies are installed:
 source .venv/bin/activate  # On macOS/Linux
 pip install -r requirements.txt
 ```
+
+### Docker Image Not Building
+
+If the Docker build fails:
+1. Ensure Docker is running: `docker ps`
+2. Check that all required files exist (Dockerfile, requirements.txt, main.py, .env)
+3. Try rebuilding without cache: `docker build --no-cache -t fastapi-test .`
+
+### Docker Container Not Accessible
+
+If you can't access the application at localhost:8000:
+1. Check if the container is running: `docker ps`
+2. Verify port mapping is correct: `-p 8000:8000`
+3. Check container logs: `docker logs <container-id>`
+4. Ensure no other service is using port 8000
 
 ## Next Steps
 
