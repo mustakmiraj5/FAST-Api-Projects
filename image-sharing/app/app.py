@@ -20,10 +20,10 @@ async def root():
     return {"message": "Hello World"}
 
 @app.get("/posts")
-async def get_posts(limit: int = None): # type: ignore
+async def get_posts(limit: int = None) -> list[Post]: # type: ignore
     if limit:
         return list(text_posts.values())[:limit]
-    return text_posts
+    return list(text_posts.values())
 
 @app.get("/posts/{post_id}")
 async def get_post(post_id: int):
@@ -33,7 +33,7 @@ async def get_post(post_id: int):
     return post
 
 @app.post("/posts")
-async def create_post(post: Post):
+async def create_post(post: Post) -> dict:
     new_id = max(text_posts.keys()) + 1
     text_posts[new_id] = post
     return {"id": new_id, "message": "Post created successfully"}
