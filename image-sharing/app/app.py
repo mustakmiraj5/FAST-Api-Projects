@@ -1,7 +1,15 @@
 from fastapi import FastAPI, HTTPException
 from .schema import Post
+from .db import init_db
+from sqlalchemy.ext.asyncio import AsyncSession
+from contextlib import asynccontextmanager
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await init_db()
+    yield
+
+app = FastAPI(lifespan=lifespan)
 
 text_posts = {
     1: Post(title="First Post", content="Hello World!"),
